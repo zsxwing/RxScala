@@ -524,6 +524,18 @@ class RxScalaDemo extends JUnitSuite {
     yield finalSum / finalCount
   }
 
+  @Test def foldLeftExample() {
+    val o = (2 to 100).toObservable.foldLeft(1)(_ + _).toBlocking.single
+    println(o)
+  }
+
+  @Test def foldLeftExample2() {
+    val o = (2 to 100).toObservable.foldLeft(mutable.ListBuffer(1))(_ += _)
+    println(o.toBlocking.single)
+    // Subscribe to `o` again and it will use a new ListBuffer
+    println(o.toBlocking.single)
+  }
+
   @Test def averageExample() {
     println(doubleAverage(Observable.empty).toBlocking.single)
     println(doubleAverage(List(0.0).toObservable).toBlocking.single)

@@ -428,4 +428,18 @@ class ObservableTests extends JUnitSuite {
     assertEquals(expectedMap3, m3.toBlocking.single)
   }
 
+  @Test
+  def testFoldLeft(): Unit = {
+    assertEquals((1 to 100).sum, (2 to 100).toObservable.foldLeft(1)(_ + _).toBlocking.single)
+  }
+
+  @Test
+  def testFoldLeft2(): Unit = {
+    val o = (2 to 100).toObservable.foldLeft(ListBuffer(1))(_ += _)
+    val r1 = o.toBlocking.single
+    val r2 = o.toBlocking.single
+    assertEquals((1 to 100), r1)
+    assertEquals((1 to 100), r2)
+    assertFalse(r1 eq r2)
+  }
 }

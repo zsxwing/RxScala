@@ -1704,17 +1704,23 @@ trait Observable[+T]
    * has an `inject` method that does a similar operation on lists.
    *
    * @param initialValue
-   *            the initial (seed) accumulator value
+   *            the initial (seed) accumulator value. Note: This is a by-name parameter.
    * @param accumulator
    *            an accumulator function to be invoked on each item emitted by the source
    *            Observable, the result of which will be used in the next accumulator call
    * @return an Observable that emits a single item that is the result of accumulating the output
    *         from the items emitted by the source Observable
    */
-  def foldLeft[R](initialValue: R)(accumulator: (R, T) => R): Observable[R] = {
-    toScalaObservable[R](asJavaObservable.reduce(initialValue, new Func2[R,T,R]{
-      def call(t1: R, t2: T): R = accumulator(t1,t2)
-    }))
+  def foldLeft[R](initialValue: => R)(accumulator: (R, T) => R): Observable[R] = {
+    toScalaObservable[Wrapper[R]](asJavaObservable.collect(new Func0[Wrapper[R]] {
+
+      override def call(): Wrapper[R] = new Wrapper[R](initialValue)
+
+    }, new Action2[Wrapper[R], T] {
+
+      override def call(wrapper: Wrapper[R], t: T): Unit = wrapper.underlying = accumulator(wrapper.underlying, t)
+
+    })).map(_.underlying)
   }
 
   /**
@@ -4758,3 +4764,4 @@ object Observable {
   }
 }
 
+private[scala] class Wrapper[T](var underlying: T)
